@@ -1,0 +1,67 @@
+---
+name: improc-petrsu-cli
+settings:
+  - ArgRequiredElseHelp
+version: "0.1.0"
+author: Denis Karpovskiy <geext29@gmail.com>
+about: A Command Line Interface for my improc-petrsu library
+subcommands:
+  - convert-to-binary:
+      about: Convert the image to binary
+      args:
+        - input-file:
+            short: i
+            long: input-file
+            help: Sets an input file
+            required: true
+            takes_value: true
+            value_name: FILE
+        - output-file:
+            short: o
+            long: output-file
+            help: Sets an output file
+            required: true
+            takes_value: true
+            value_name: FILE
+        - threshold:
+            short: t
+            long: threshold
+            help: The threshold to use (from 0 to 256 exclusive)
+            required: false
+            takes_value: true
+            value_name: VALUE
+            default_value: "150"
+  - skeletonize:
+      about: Skeletonize the image
+      args:
+        - algorithm:
+            short: a
+            long: algorithm
+            help: An algorithm to use during skeletonization
+            required: true
+            takes_value: true
+            value_name: NAME
+            possible_values: [Eberly, Rosenfeld, ZhangSuen]
+        - input-file:
+            short: i
+            long: input-file
+            help: Sets an input file
+            required: true
+            takes_value: true
+            value_name: FILE
+        - output-file:
+            short: o
+            long: output-file
+            help: Sets an output file
+            required: true
+            takes_value: true
+            value_name: FILE
+        - adjacency-mode:
+            short: m
+            long: adjacency-mode
+            help: Sets an adjacency mode
+            required_if:
+              - [algorithm, Rosenfeld]
+            takes_value: true
+            value_name: MODE
+            possible_values: [Four, Eight]

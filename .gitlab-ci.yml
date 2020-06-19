@@ -1,0 +1,129 @@
+image: fedora:30
+
+build-linux:
+  stage: build
+  variables:
+    PKG_CONFIG_ALLOW_CROSS: 1
+  before_script:
+  - 'dnf install git gcc gtk3-devel -y'
+  - 'git --version'
+  - 'gcc --version'
+  - 'curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path -y'
+  - 'export PATH="$PATH:~/.cargo/bin"'
+  - 'rustc -vV'
+  - 'cargo -v'
+  - 'rustup target add x86_64-unknown-linux-musl'
+  script:
+  - 'cargo build --release --target x86_64-unknown-linux-musl'
+  - 'mkdir out'
+  - 'mv target/x86_64-unknown-linux-musl/release/improc-petrsu-gtk out'
+  artifacts:
+    paths:
+    - out/improc-petrsu-gtk
+    expire_in: 20 min
+
+build-win:
+  stage: build
+  variables:
+    PKG_CONFIG_ALLOW_CROSS: 1
+    PKG_CONFIG_PATH: /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig
+    RUSTFLAGS: >
+      -C ar=x86_64-w64-mingw32-ar
+      -C linker=x86_64-w64-mingw32-gcc
+  before_script: 
+  - 'dnf install git gcc mingw64-gcc mingw64-gtk3 mingw64-winpthreads-static -y'
+  - 'git --version'
+  - 'gcc --version'
+  - 'x86_64-w64-mingw32-ar --version'
+  - 'x86_64-w64-mingw32-gcc --version'
+  - 'curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path -y'
+  - 'export PATH="$PATH:~/.cargo/bin"'
+  - 'rustc -vV'
+  - 'cargo -v'
+  - 'rustup target add x86_64-pc-windows-gnu'
+  script:
+  - 'cargo build --release --target x86_64-pc-windows-gnu'
+  - 'mkdir out'
+  - 'mv target/x86_64-pc-windows-gnu/release/improc-petrsu-gtk.exe out'
+  artifacts:
+    paths:
+    - out/improc-petrsu-gtk.exe
+    expire_in: 20 min
+
+deploy-linux:
+  stage: deploy
+  dependencies:
+  - build-linux
+  variables:
+    OUTDIR: out
+  before_script:
+  - 'dnf install -y zip'
+  script:
+  - 'cd $OUTDIR'
+  - 'zip improc-petrsu-linux.zip improc-petrsu-gtk'
+  - 'mv improc-petrsu-linux.zip ..'
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_JOB_ID"
+    paths:
+    - 'improc-petrsu-linux.zip'
+
+deploy-win:
+  stage: deploy
+  dependencies:
+  - build-win
+  variables:
+    MINGW_ROOT: /usr/x86_64-w64-mingw32/sys-root/mingw
+    OUTDIR: out
+  before_script:
+  - >
+      dnf install -y
+      mingw64-gtk3 mingw64-adwaita-icon-theme mingw64-win-iconv
+      mingw64-atk mingw64-zlib mingw64-bzip2 mingw64-cairo
+      mingw64-libepoxy mingw64-expat mingw64-fontconfig
+      mingw64-freetype mingw64-graphite2 mingw64-hicolor-icon-theme
+      zip
+  script:
+  - 'mkdir -p $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/iconv.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libatk-1.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libbz2-1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libcairo-2.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libcairo-gobject-2.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libcairo-script-interpreter-2.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libepoxy-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libexpat-1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libffi-6.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libfontconfig-1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libfreetype-6.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgcc_s_seh-1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgdk-3-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgdk_pixbuf-2.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgio-2.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libglib-2.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgmodule-2.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgobject-2.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgraphite2.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libgtk-3-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libharfbuzz-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libintl-8.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpango-1.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpangocairo-1.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpangoft2-1.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpangowin32-1.0-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpcre-1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpixman-1-0.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libpng16-16.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libstdc++-6.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/zlib1.dll $OUTDIR'
+  - 'cp $MINGW_ROOT/bin/libwinpthread-1.dll $OUTDIR'
+  - 'mkdir -p $OUTDIR/share/glib-2.0/schemas'
+  - 'cp $MINGW_ROOT/share/glib-2.0/schemas/* $OUTDIR/share/glib-2.0/schemas'
+  - 'mkdir $OUTDIR/share/icons'
+  - 'cp -r $MINGW_ROOT/share/icons/Adwaita $OUTDIR/share/icons/'
+  - 'cp -r $MINGW_ROOT/share/icons/hicolor $OUTDIR/share/icons/'
+  - 'cd $OUTDIR'
+  - 'zip -r $CI_PROJECT_DIR/improc-petrsu-win.zip *'
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_JOB_ID"
+    paths:
+    - 'improc-petrsu-win.zip'

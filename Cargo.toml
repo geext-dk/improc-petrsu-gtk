@@ -1,0 +1,19 @@
+[package]
+name = "improc-petrsu-gtk"
+version = "0.3.0"
+authors = ["Denis Karpovskiy <geext29@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+improc-petrsu = { version = "0.3", git = "https://gitlab.com/geext/improc-petrsu.git" }
+image = "0.23.4"
+clap = { version = "2.33.0", features = ["yaml"] }
+gtk = { version = "0.8.1", features = ["v3_20"] }
+gio = { version = "0.8.1", features = ["v2_44"] }
+glib = { version = "0.9.3", features = ["v2_44"] }
+gdk-pixbuf = "0.8"
+log = "0.4.8"
+env_logger = "0.7.1"
